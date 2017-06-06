@@ -1,0 +1,47 @@
+{
+    "showStatForBattle": true,
+    "battleStatPatterns": [
+    ],
+    "battleStatText": [
+    ],
+    "hideMessagePatterns": [
+    ],
+    "overwriteBattleResultBgIcon": false,
+    "bgIconDefeat": "",
+    "bgIconDraw": "",
+    "bgIconWin": "",
+    "debugBattleResultMessage": false,
+    "updateExpectedTankValues": true,
+    "urlForExpectedTankValues": "",
+    "checkForUpdate": true,
+    "showPopUp": true,
+    "thousandSeparator": " ",
+    "battleType": [1],
+    "onlineReloadConfig": false,
+    "clientReloadReset": false,
+    "buttonGeneral": "",
+    "buttonTank": "",
+    "buttonReset": "",
+    "dailyAutoReset": false,
+    "dailyAutoResetHour": 6,
+    "enableBattleEndedMessage": true,
+    "battleEndedMessageDefeat": "",
+    "battleEndedMessageDraw": "",
+    "battleEndedMessageWin": "",
+    "statBackground": "",
+    "icon": "",
+    "statByTank": true,
+    "byTankTitle": "",
+    "byTankStats": "",
+    "byTankButton": "",
+    "sortReverse": true,
+    "sortMacro": "WN8",
+    "template": [
+    ],
+    "userMacros": {
+        },
+    "gradient": {
+    },
+    "palette" : {
+    }
+}
