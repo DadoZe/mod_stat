@@ -25,6 +25,7 @@
     avgPlace                 Average place in battles fought                                       totalPlace / battlesCount
     avgPotDmgRec             Average potential damage received                                     totalPotDmgRec / battlesCount
     avgResources             Average resources from Stronghold battles                             totalResources / battlesCountStrongholdSkirmish
+    avgService               Average Service from battle                                           service / battlesCount
     avgShots                 Average number of shots                                               totalShots / battlesCount
     avgSpot                  Average number of spotted enemies                                     totalSpot / battlesCount
     avgTeamInfluence         Average influence from Stronghold battles by team                     totalTeamInfluence / battlesCountStrongholdSkirmish

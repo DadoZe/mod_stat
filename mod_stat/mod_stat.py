@@ -232,8 +232,12 @@ class SessionStatistic(object):
 
                 self.thousandSeparator = self.config.get('thousandSeparator', ' ')
                 self.useMessenger = self.config.get('useMessenger', True)
+                self.enableByTank = self.config.get('enableByTank', True)
                 self.useParametersPanel = self.config.get('useParametersPanel', False)
-                self.statByTank = self.config.get('statByTank', False)
+                self.enablePanelAccount = self.config.get('enablePanelAccount', False)
+                self.enablePanelSession = self.config.get('enablePanelSession', False)
+                self.enablePanelImpact = self.config.get('enablePanelImpact', False)
+                self.enableByTankPanel = self.config.get('enableByTankPanel', False)
                 setHandlers(self)
                 self.configIsValid = True
             except:
@@ -988,14 +992,14 @@ class SessionStatistic(object):
                 fullMsg = ''
 
                 templateAccount = self.config.get('templatePanelAccount', '')
-                if self.account and templateAccount and not self.session:
+                if self.account and templateAccount and not self.session and self.enablePanelAccount:
                     msg = '\n'.join(templateAccount)
                     userMacros = self.config.get('userMacros', {})
                     for key in userMacros.keys():
                         msg = msg.replace('{{%s}}' % key, userMacros[key])
                     fullMsg = self.formatString(msg, self.account)
 
-                if self.session:
+                if self.session and self.enablePanelSession:
                     if self.account and templateAccount and not self.session:
                         fullMsg = fullMsg + '\n\n'
                     bg = self.config.get('statBackground', '')
@@ -1007,7 +1011,7 @@ class SessionStatistic(object):
                     fullMsg = fullMsg + self.formatString(msg, self.session)
 
                     templateImpact = self.config.get('templatePanelImpact', '')
-                    if self.impact and templateImpact:
+                    if self.impact and templateImpact and self.enablePanelImpact:
                         msg = '\n'.join(templateImpact)
                         userMacros = self.config.get('userMacros', {})
                         for key in userMacros.keys():
@@ -1016,7 +1020,7 @@ class SessionStatistic(object):
 
                 self.messagePanel = fullMsg
 
-                if self.tanks and self.statByTank:
+                if self.tanks and self.enableByTankPanel:
                     msg = self.config.get('byTankTitlePanel', '')
                     row = self.config.get('byTankStatsPanel', '')
                     sorting = self.config.get('sortReverse', True)
@@ -1052,7 +1056,7 @@ class SessionStatistic(object):
                     self.bgIcon = self.formatString(bg, self.calcWN8([], False, False))
                     self.messageGeneral = self.formatString(msg, {'values': {}}, '0')
 
-                if self.tanks and self.statByTank:
+                if self.tanks and self.enableByTank:
                     msg = self.config.get('byTankTitle', '')
                     row = self.config.get('byTankStats', '')
                     sorting = self.config.get('sortReverse', True)
@@ -1320,42 +1324,43 @@ def getFormattedParams(self, comparator, expandedGroups = None, vehIntCD = None)
               'valueText': "<font></font>"
             },separator])
 
-    if expandedStatisticsGroups['statistics']:
-        result.extend([{
-          'buffIconSrc': '',
-          'isOpen': True,
-          'isEnabled': True,
-          'tooltip': '',
-          'state': 'simpleTop',
-          'paramID': 'statistics',
-          'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['statistics'] + "</font>",
-          'valueText': "<font></font>"
-        },separator])
-        for line in stat.messagePanel.split('\n'):
-            if line=='':
-                result.append(separator)
-            else:
-                result.append({
-                  'titleText': line,
-                  'valueText': "<font></font>",
-                  'iconSource': '',
-                  'isEnabled': False,
-                  'tooltip': '',
-                  'state': 'advanced',
-                  'paramID': 'statistics'
-                })
-        result.append(separator)
-    else:
-        result.extend([{
-          'buffIconSrc': '',
-          'isOpen': False,
-          'isEnabled': True,
-          'tooltip': '',
-          'state': 'simpleTop',
-          'paramID': 'statistics',
-          'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['statistics'] + "</font>",
-          'valueText': "<font></font>"
-        },separator])
+    if stat.messagePanel != '':
+        if expandedStatisticsGroups['statistics']:
+            result.extend([{
+              'buffIconSrc': '',
+              'isOpen': True,
+              'isEnabled': True,
+              'tooltip': '',
+              'state': 'simpleTop',
+              'paramID': 'statistics',
+              'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['statistics'] + "</font>",
+              'valueText': "<font></font>"
+            },separator])
+            for line in stat.messagePanel.split('\n'):
+                if line=='':
+                    result.append(separator)
+                else:
+                    result.append({
+                      'titleText': line,
+                      'valueText': "<font></font>",
+                      'iconSource': '',
+                      'isEnabled': False,
+                      'tooltip': '',
+                      'state': 'advanced',
+                      'paramID': 'statistics'
+                    })
+            result.append(separator)
+        else:
+            result.extend([{
+              'buffIconSrc': '',
+              'isOpen': False,
+              'isEnabled': True,
+              'tooltip': '',
+              'state': 'simpleTop',
+              'paramID': 'statistics',
+              'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['statistics'] + "</font>",
+              'valueText': "<font></font>"
+            },separator])
 
     if stat.panelByTank != '':
         if expandedStatisticsGroups['vehicles']:
