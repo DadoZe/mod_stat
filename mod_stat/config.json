@@ -95,7 +95,7 @@
         "<font size='12' color='#929292'>Efficiency/WN8:<tab><b><font color='{{g:EFF}}'>{{EFF:d}}</font> (<font color='{{g:EFF}}'>{{XEFF}}</font>)<tab><tab><font color='{{g:WN8}}'>{{WN8:d}}</font> (<font color='{{g:WN8}}'>{{XWN8}}</font>)</b></font></textformat>",
         "\n<p align='left'>{{buttonGeneralOn}}{{buttonTank}}{{buttonReset}}</p>"
     ],
-    "enablePanelAccount": false,
+    "enablePanelAccount": true,
     "templatePanelAccount": [
         "<textformat leading='-4'><font size='13' color='#FFCC66'>Account</font></textformat>\n{{Line3.png}}",
         "<textformat tabstops='[90,110,165]'><font size='12' color='#929292'>Win rate:<tab>{{Battles.png}}<tab><b><font color='{{g:avgWinRate}}'>{{avgWinRate:1f}}%</font></b></font></textformat>",
