@@ -433,7 +433,7 @@ class SessionStatistic(object):
              'damageAssistedRadio': personal['damageAssistedRadio'],
              'damageAssistedTrack': personal['damageAssistedTrack'],
              'assist': personal['damageAssistedRadio'] + personal['damageAssistedTrack'],
-             'vehicle-raw': vt.name,
+             'vehicle-raw': vt.name.replace(':', '-'),
              'vehicle-short': vt.shortUserString,
              'vehicle-long': vt.userString,
              'map-raw': arenaType.geometryName,
@@ -814,6 +814,7 @@ class SessionStatistic(object):
             values['avgEventTmenXP'] = int(values['totalEventTmenXP'] / values['battlesCount'])
             values['avgNetCredits'] = int(values['netCredits'] / values['battlesCount'])
             values['avgGrossCredits'] = int(values['grossCredits'] / values['battlesCount'])
+            values['avgService'] = int(values['service'] / values['battlesCount'])
             values['avgTier'] = float(totalTier) / values['battlesCount']
             values['avgBattleTier'] = float(totalBattleTier) / values['battlesCount']
             values['avgPlace'] = round(float(totalPlace) / values['battlesCount'], 1)
@@ -878,6 +879,7 @@ class SessionStatistic(object):
              'avgEventTmenXP',
              'avgNetCredits',
              'avgGrossCredits',
+             'avgService',
              'avgTier',
              'avgBattleTier',
              'medPlace',
@@ -1137,7 +1139,7 @@ class SessionStatistic(object):
                 v.update({
                   'idNum': intCD,
                   'tier': vt.level,
-                  'vehicle-raw': vt.name,
+                  'vehicle-raw': vt.name.replace(':', '-'),
                   'vehicle-short': vt.shortUserString,
                   'vehicle-long': vt.userString,
                 })
@@ -1227,7 +1229,7 @@ def new_npuv_sendMessageForDisplay(self, notification):
         old_npuv_sendMessageForDisplay(self, notification)
 
 vehicleParams = None
-expandedStatisticsGroups = {'parameters': False, 'research': True, 'mission': True, 'statistics': True, 'vehicles': False}
+expandedStatisticsGroups = {'parameters': False, 'research': True, 'statistics': True, 'vehicles': False}
 separator = {'state': 'separator', 'isEnabled': False, 'tooltip': ''}
 
 def refreshPanelDisplay():
@@ -1317,45 +1319,7 @@ def getFormattedParams(self, comparator, expandedGroups = None, vehIntCD = None)
               'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['research'] + "</font>",
               'valueText': "<font></font>"
             },separator])
-        
-    if vehicleMissionMsg != '':
-        if expandedStatisticsGroups['mission']:
-            result.extend([{
-              'buffIconSrc': '',
-              'isOpen': True,
-              'isEnabled': True,
-              'tooltip': '',
-              'state': 'simpleTop',
-              'paramID': 'mission',
-              'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['mission'] + "</font>",
-              'valueText': "<font></font>"
-            },separator])
-            for line in vehicleMissionMsg.split('\n'):
-                if line=='':
-                    result.append(separator)
-                else:
-                    result.append({
-                      'titleText': line,
-                      'valueText': "<font></font>",
-                      'iconSource': '',
-                      'isEnabled': False,
-                      'tooltip': '',
-                      'state': 'advanced',
-                      'paramID': 'mission'
-                    })
-            result.append(separator)
-        else:
-            result.extend([{
-              'buffIconSrc': '',
-              'isOpen': False,
-              'isEnabled': True,
-              'tooltip': '',
-              'state': 'simpleTop',
-              'paramID': 'mission',
-              'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['mission'] + "</font>",
-              'valueText': "<font></font>"
-            },separator])
-    
+
     if expandedStatisticsGroups['statistics']:
         result.extend([{
           'buffIconSrc': '',
@@ -1392,7 +1356,7 @@ def getFormattedParams(self, comparator, expandedGroups = None, vehIntCD = None)
           'titleText': "<font face='$TitleFont' size='15' color='#E9E2BF'>" + panelTitles['statistics'] + "</font>",
           'valueText': "<font></font>"
         },separator])
-    
+
     if stat.panelByTank != '':
         if expandedStatisticsGroups['vehicles']:
             result.extend([{
@@ -1526,6 +1490,7 @@ def onChatMessageReceived(id, message):
                 battleEndedMessage = battleEndedMessage.replace('{{vehicle-long}}', vt.userString)
                 name = vt.name.replace(':', '-')
                 battleEndedMessage = battleEndedMessage.replace('{{vehicle-raw}}', name)
+                battleEndedMessage = battleEndedMessage.replace('{{vehicle-short}}', vt.shortUserString)
                 arenaTypeID = message.data.get('arenaTypeID', 0)
                 arenaType = ArenaType.g_cache[arenaTypeID]
                 arenaName = i18n.makeString(arenaType.name)
@@ -1574,10 +1539,9 @@ BattleSessionProvider._BattleSessionProvider__pe_onBattleResultsReceived = new__
 
 stat = SessionStatistic()
 
-# research watchdog & vehicle mission
+# research watchdog
 
 researchWatchdogMsg = ''
-vehicleMissionMsg = ''
 
 if stat.configIsValid:
     config = stat.config.get("researchWatchdog", {})
