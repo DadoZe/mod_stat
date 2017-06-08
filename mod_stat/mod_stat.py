@@ -46,7 +46,7 @@ g_itemsCache = dependency.instance(IItemsCache)
 
 GENERAL = 0
 BY_TANK = 1
-VERSION = '0.9.19.0.1b beta'
+VERSION = '0.9.19.0.2 beta'
 URLLINK = 'http://bit.ly/YasenKrasen'
 
 print 'Loading mod: YasenKrasen Session Statistics ' + VERSION + ' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
@@ -238,6 +238,7 @@ class SessionStatistic(object):
                 self.enablePanelSession = self.config.get('enablePanelSession', False)
                 self.enablePanelImpact = self.config.get('enablePanelImpact', False)
                 self.enableByTankPanel = self.config.get('enableByTankPanel', False)
+                self.enableResearchWatchdog = self.config.get('enableResearchWatchdog', False)
                 setHandlers(self)
                 self.configIsValid = True
             except:
@@ -1548,7 +1549,7 @@ stat = SessionStatistic()
 
 researchWatchdogMsg = ''
 
-if stat.configIsValid:
+if stat.configIsValid and stat.enableResearchWatchdog:
     config = stat.config.get("researchWatchdog", {})
     if config:
         from items import ITEM_TYPE_INDICES, ITEM_TYPE_NAMES
