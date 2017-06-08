@@ -16,7 +16,9 @@ from Account import Account
 from Queue import Queue
 from account_helpers import BattleResultsCache
 from debug_utils import *
+from gui import DialogsInterface
 from gui import SystemMessages
+from gui.Scaleform.daapi.view.dialogs import SimpleDialogMeta, I18nConfirmDialogButtons
 from gui.shared.utils.requesters import StatsRequester
 from helpers import i18n
 from items import vehicles as vehiclesWG
@@ -28,7 +30,7 @@ from xml.dom.minidom import parseString
 
 GENERAL = 0
 BY_TANK = 1
-VERSION = '0.9.19.0.1a'
+VERSION = '0.9.19.0.2'
 URLLINK = 'http://bit.ly/YasenKrasen'
 
 print 'Loading mod: YasenKrasen Session Statistics '' + VERSION + '' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
@@ -553,6 +555,7 @@ class SessionStatistic(object):
             values['avgEventTmenXP'] = int(values['totalEventTmenXP']/values['battlesCount'])
             values['avgNetCredits'] = int(values['netCredits']/values['battlesCount'])
             values['avgGrossCredits'] = int(values['grossCredits']/values['battlesCount'])
+            values['avgService'] = int(values['service'] / values['battlesCount'])
             values['avgTier'] = float(totalTier)/values['battlesCount']
             values['avgBattleTier'] = float(totalBattleTier)/values['battlesCount']
             values['avgPlace'] = round(float(totalPlace)/values['battlesCount'], 1)
@@ -604,7 +607,7 @@ class SessionStatistic(object):
         else:
             for key in ['avgResources', 'avgTeamResources', 'avgInfluence', 'avgTeamInfluence', 'avgWinRate', 'avgDamage', 'avgDamageRec', 'avgMileage', 'avgMileagekm', 'avgPotDmgRec', 'survivalRate', 'deathsRate', 'avgDeathsCount',\
                 'avgFrag', 'avgShots', 'hitsRate', 'effHitsRate', 'avgSpot', 'avgDef', 'avgCap', 'avgAssist', 'avgDmgAssistTrack', 'avgDmgAssistRadio', 'avgXP', 'avgOriginalXP', 'avgOriginalPremXP', 'avgFreeXP', 'avgOriginalFreeXP',\
-                'avgTmenXP', 'avgEventTmenXP', 'avgNetCredits', 'avgGrossCredits', 'avgTier', 'avgBattleTier', 'medPlace', 'avgPlace', 'WN6', 'XWN6', 'WN7', 'XWN7', 'EFF', 'XEFF', 'BR']:
+                'avgTmenXP', 'avgEventTmenXP', 'avgNetCredits', 'avgGrossCredits', 'avgService', 'avgTier', 'avgBattleTier', 'medPlace', 'avgPlace', 'WN6', 'XWN6', 'WN7', 'XWN7', 'EFF', 'XEFF', 'BR']:
                 values[key] = 0
             for key in expKeys:
                 values[key] = 1
@@ -680,7 +683,7 @@ class SessionStatistic(object):
         msg = self.formatString(msg, self.values, self.gradient, self.palette)
         self.messageGeneral = msg
 
-        if len(self.battles) and stat.config.get('statByTank', True):
+        if len(self.battles) and self.config.get('enableByTank', True):
             msg = self.config.get('byTankTitle','')
             tankStat = {}
             for battle in self.battles:
@@ -843,10 +846,15 @@ def new_onClickAction(self, typeID, entityID, action):
         elif action.split(':')[1] == 'buttonTank' and stat.messageByTank != '':
             stat.page = BY_TANK
         elif action.split(':')[1] == 'buttonReset':
-            stat.reset()
+            BigWorld.callback(0, lambda: showConfirmDialog('Are you sure to reset session statistics?', lambda result: doReset(self, result)))
         self.as_updateMessageS(stat.createMessage())
     else:
         old_nlv_onClickAction(self, typeID, entityID, action)
+
+def doReset(nlv, confirmed):
+    if confirmed:
+        stat.reset()
+        nlv.as_updateMessageS(stat.createMessage())
 
 def new_onClickPopup(self, typeID, entityID, action):
     if action == URLLINK:
@@ -866,6 +874,9 @@ def new_npuv_sendMessageForDisplay(self, notification):
 NotificationPopUpViewer._NotificationPopUpViewer__sendMessageForDisplay = new_npuv_sendMessageForDisplay
 
 old_brf_format = BattleResultsFormatter.format
+
+def showConfirmDialog(message, callback):
+    DialogsInterface.showDialog(SimpleDialogMeta(title="Confirm", message=message, buttons=I18nConfirmDialogButtons()), callback)
 
 def new_brf_format(self, message, *args):
     result = old_brf_format(self, message, *args)
@@ -888,6 +899,7 @@ def new_brf_format(self, message, *args):
             battleEndedMessage = battleEndedMessage.replace('{{vehicle-long}}', vt.userString)
             name = vt.name.replace(':', '-')
             battleEndedMessage = battleEndedMessage.replace('{{vehicle-raw}}', name)
+            battleEndedMessage = battleEndedMessage.replace('{{vehicle-short}}', vt.shortUserString)
             arenaTypeID = message.data.get('arenaTypeID', 0)
             arenaType = ArenaType.g_cache[arenaTypeID]
             arenaName = i18n.makeString(arenaType.name)
