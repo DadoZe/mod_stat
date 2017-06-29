@@ -253,10 +253,6 @@ class SessionStatistic(object):
         return (datetime.date.today() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
 
     def save(self):
-        if self.account and self.session:
-            self.impact = self.calcWN8([self.account['values'], self.session['values']], fromBattleResult=False, forTank=False)
-            self.impact['_type'] = 'impact'
-
         statCache = open(self.statCacheFilePath, 'w')
         self.cache['version'] = self.cacheVersion
         self.cache['date'] = self.startDate
@@ -472,6 +468,10 @@ class SessionStatistic(object):
                 else:
                     self.tanks[idNum] = copy.deepcopy(battleStat)
                 self.tanks[idNum]['_type'] = 'tanks'
+
+            if self.account and self.session:
+                self.impact = self.calcWN8([self.account['values'], self.session['values']], fromBattleResult=False, forTank=False)
+                self.impact['_type'] = 'impact'
             self.updateMessage()
             self.save()
         except:
