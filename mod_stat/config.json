@@ -1,6 +1,6 @@
 {
+    "debug": false,
     "showStatForBattle": true,
-    "debugBattleResultMessage": false,
     "checkForUpdate": true,
     "updateExpectedTankValues": true,
     "urlForExpectedTankValues": "http://www.wnefficiency.net/exp/expected_tank_values_latest.json",

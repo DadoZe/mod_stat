@@ -40,9 +40,11 @@ from notification.NotificationPopUpViewer import NotificationPopUpViewer
 from skeletons.gui.battle_results import IBattleResultsService
 from skeletons.gui.battle_session import IBattleSessionProvider
 from skeletons.gui.shared import IItemsCache
+from skeletons.connection_mgr import IConnectionManager
 from xml.dom.minidom import parseString
 
 g_itemsCache = dependency.instance(IItemsCache)
+connectionManager = dependency.instance(IConnectionManager)
 
 GENERAL = 0
 BY_TANK = 1
@@ -50,6 +52,8 @@ VERSION = '0.9.19.0.2 beta'
 URLLINK = 'http://bit.ly/YasenKrasen'
 
 print 'Loading mod: YasenKrasen Session Statistics ' + VERSION + ' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
+
+d = False #debug
 
 def MYPPRINT(obj, name = None):
     import inspect, pprint
@@ -79,13 +83,14 @@ class SessionStatistic(object):
 
     def __init__(self):
         self.page = GENERAL
-        self.cacheVersion = 10
+        self.cacheVersion = 11
         self.queue = Queue()
         self.loaded = False
         self.configIsValid = True
         self.battleStats = {}
         self.cache = {}
         self.account = {}
+        self.accountTanks = {}
         self.session = {}
         self.impact = {}
         self.tanks = {}
@@ -125,7 +130,7 @@ class SessionStatistic(object):
             return
 
         if not g_itemsCache.items.isSynced():
-            LOG_NOTE('waiting for sync')
+            if d: LOG_NOTE('waiting for sync')
             # we need to be in sync to get account stats (probably)
             BigWorld.callback(1, stat.load)
             return
@@ -133,6 +138,7 @@ class SessionStatistic(object):
         self.loaded = True
         self.battles = []
         self.playerName = BigWorld.player().name
+        if d: LOG_NOTE(self.playerName)
 
         if self.config.get('updateExpectedTankValues', True):
             expurl = self.config.get('urlForExpectedTankValues', 'http://www.wnefficiency.net/exp/expected_tank_values_latest.json')
@@ -169,13 +175,15 @@ class SessionStatistic(object):
                     self.startDate = self.cache.get('date', self.getWorkDate())
                     if self.cache.get('version', 0) == self.cacheVersion and (self.startDate == self.getWorkDate() or not self.config.get('dailyAutoReset', True)) and not self.config.get('clientReloadReset', False):
                         if self.cache.get('players', {}).has_key(self.playerName):
+                            if d: LOG_NOTE("loading player from cache")
                             playerCache = self.cache['players'][self.playerName]
                             self.battles = playerCache['battles']
                             self.account = playerCache['account']
+                            self.accountTanks = playerCache['accountTanks']
                             self.session = playerCache['session']
                             self.impact = playerCache['impact']
                             self.tanks = playerCache['tanks']
-                        invalidCache = False
+                            invalidCache = False
                 except:
                     LOG_NOTE('[mod_stat] Unable to read player''s cache.')
         if invalidCache:
@@ -210,9 +218,11 @@ class SessionStatistic(object):
                 LOG_NOTE('[mod_stat] Unable to access remote update file.')
 
     def readConfig(self):
+        global d
         with codecs.open(self.configFilePath, 'r', 'utf-8-sig') as configFileJson:
             try:
                 self.config = json.load(configFileJson)
+                d = self.config.get("debug", False)
                 self.config.update(self.config.get(getClientLanguage(), self.config.get("en", {})))
                 self.battleStatPatterns = []
                 for pattern in self.config.get('battleStatPatterns', []):
@@ -239,6 +249,7 @@ class SessionStatistic(object):
                 self.enablePanelImpact = self.config.get('enablePanelImpact', False)
                 self.enableByTankPanel = self.config.get('enableByTankPanel', False)
                 self.enableResearchWatchdog = self.config.get('enableResearchWatchdog', False)
+                self.fastCache = self.config.get("fastCache", False)
                 setHandlers(self)
                 self.configIsValid = True
             except:
@@ -258,15 +269,15 @@ class SessionStatistic(object):
         self.cache['date'] = self.startDate
         if not self.cache.has_key('players'):
             self.cache['players'] = {}
-        fastCache = self.config.get("fastCache", False)
         self.cache['players'][self.playerName] = {
-          'battles': [] if fastCache else self.battles,
+          'battles': [] if self.fastCache else self.battles,
           'account': self.account,
+          'accountTanks': self.accountTanks,
           'session': self.session,
           'impact': self.impact,
           'tanks': self.tanks
         }
-        if fastCache:
+        if self.fastCache:
             statCache.write(json.dumps(self.cache))
         else:
             statCache.write(json.dumps(self.cache, sort_keys=True, indent=4, separators=(',', ': ')))
@@ -293,13 +304,13 @@ class SessionStatistic(object):
         while True:
             self.battleResultsBusy.acquire()
             arenaUniqueID, callWhenDone = self.queue.get()
-            LOG_NOTE('got arenaUniqueID from the queue start %s' % str(arenaUniqueID))
+            if d: LOG_NOTE('got arenaUniqueID from the queue start %s' % str(arenaUniqueID))
             self.battleResultsAvailable.wait()
             BigWorld.player().battleResultsCache.get(arenaUniqueID, lambda resID, value: self.battleResultsCallback(arenaUniqueID, resID, value, callWhenDone))
-            LOG_NOTE('got arenaUniqueID from the queue end %s' % str(arenaUniqueID))
+            if d: LOG_NOTE('got arenaUniqueID from the queue end %s' % str(arenaUniqueID))
 
     def battleResultsCallback(self, arenaUniqueID, responseCode, value = None, callWhenDone = None):
-        LOG_NOTE('battleResultsCallback start %s' % str(arenaUniqueID))
+        if d: LOG_NOTE('battleResultsCallback start %s' % str(arenaUniqueID))
         #RES_FAILURE = -1
         #RES_WRONG_ARGS = -2
         #RES_NON_PLAYER = -3
@@ -315,11 +326,11 @@ class SessionStatistic(object):
         if responseCode == AccountCommands.RES_NON_PLAYER or responseCode == AccountCommands.RES_COOLDOWN:
             self.queue.put((arenaUniqueID, callWhenDone))
             BigWorld.callback(1.0, lambda: self.battleResultsBusy.release())
-            LOG_NOTE('battleResultsCallback end %s %s' % (str(arenaUniqueID), str(responseCode)))
+            if d: LOG_NOTE('battleResultsCallback end %s %s' % (str(arenaUniqueID), str(responseCode)))
             return
         if responseCode < 0:
             self.battleResultsBusy.release()
-            LOG_NOTE('battleResultsCallback end %s %s' % (str(arenaUniqueID), str(responseCode)))
+            if d: LOG_NOTE('battleResultsCallback end %s %s' % (str(arenaUniqueID), str(responseCode)))
             return
         try:
             lastArenaUniqueID = None
@@ -328,7 +339,7 @@ class SessionStatistic(object):
                 lastArenaUniqueID = arenaUniqueID
             isSuccess = True
             if arenaUniqueID in self.battleStats:
-                LOG_NOTE('We have processed this arenaUniqueID already!')
+                if d: LOG_NOTE('We have processed this arenaUniqueID already!')
                 isSuccess = False
             else:
                 self.processBattleResults(value)
@@ -336,14 +347,14 @@ class SessionStatistic(object):
         except:
             LOG_CURRENT_EXCEPTION()
         finally:
-            LOG_NOTE('finally')
+            if d: LOG_NOTE('finally')
             self.battleResultsBusy.release()
             if isSuccess and callWhenDone:
                 BigWorld.callback(0, callWhenDone)
-            LOG_NOTE('battleResultsCallback end %s' % str(arenaUniqueID))
+            if d: LOG_NOTE('battleResultsCallback end %s' % str(arenaUniqueID))
 
     def processBattleResults(self, value):
-        LOG_NOTE('processBattleResults start')
+        if d: LOG_NOTE('processBattleResults start')
         try:
             arenaUniqueID = value['arenaUniqueID']
             arenaTypeID = value['common']['arenaTypeID']
@@ -473,24 +484,26 @@ class SessionStatistic(object):
                 self.impact = self.calcWN8([self.account['values'], self.session['values']], fromBattleResult=False, forTank=False)
                 self.impact['_type'] = 'impact'
             self.updateMessage()
-            self.save()
+            if not self.fastCache:
+                self.save()
         except:
             LOG_CURRENT_EXCEPTION()
         finally:
-            LOG_NOTE('processBattleResults end')
+            if d: LOG_NOTE('processBattleResults end')
 
     def reset(self):
-        LOG_NOTE('reset start')
+        if d: LOG_NOTE('reset start')
         self.page = GENERAL
         self.startDate = self.getWorkDate()
         self.battles = []
         self.account = {}
+        self.accountTanks = {}
         self.session = {}
         self.impact = {}
         self.tanks = {}
         self.getAccountStats()
         self.updateMessage()
-        LOG_NOTE('reset end')
+        if d: LOG_NOTE('reset end')
 
     def refreshColorMacros(self, values):
         gradient = {}
@@ -917,9 +930,22 @@ class SessionStatistic(object):
         values['avgDamage'] = int(values['avgDamage'])
         values['avgMileage'] = int(values['avgMileage'])
 
-        if battles and 'EFF' in battles[0]:
-            for key in ['avgWinRate', 'EFF', 'WN8']:
-                values['d' + key] = values[key] - battles[0][key]
+        if battles:
+            if forTank:
+                sIdNum = str(idNum)
+                if sIdNum in self.accountTanks:
+                    accountTank = self.accountTanks[sIdNum]
+                    for key in ['avgWinRate', 'EFF', 'WN8']:
+                        values['d' + key] = (values[key] * values['battlesCount'] + accountTank[key] * accountTank['battlesCount']) / (values['battlesCount'] + accountTank['battlesCount']) - accountTank[key]
+                else:
+                    accountTank = values
+                    self.accountTanks[sIdNum] = accountTank
+                    for key in ['avgWinRate', 'EFF', 'WN8']:
+                        values['d' + key] = 0
+            else:
+                if 'EFF' in battles[0]:
+                    for key in ['avgWinRate', 'EFF', 'WN8']:
+                        values['d' + key] = values[key] - battles[0][key]
 
         gradient, palette = self.refreshColorMacros(values)
         return {'values': values, 'gradient': gradient, 'palette': palette}
@@ -951,7 +977,7 @@ class SessionStatistic(object):
             g, g1, key, g2, sg1, sg2, sg3, sg4a, sg4b, sg5, sg6 = m.group(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
             if not key in values:
                 if not_found_replacement is None:
-                    LOG_NOTE('No key in values of %s (%s)' % (stats.get('_type', 'unknown'), key))
+                    if d: LOG_NOTE('No key in values of %s (%s)' % (stats.get('_type', 'unknown'), key))
                 else:
                     text = text.replace('%s' % g, not_found_replacement)
             elif g1 is None:
@@ -981,7 +1007,7 @@ class SessionStatistic(object):
         return text
 
     def updateMessage(self):
-        LOG_NOTE('updateMessage start')
+        if d: LOG_NOTE('updateMessage start')
         if not self.configIsValid:
             self.messagePanel = "Session statistics' config.json is not valid"
             self.messageGeneral = "Session statistics' config.json is not valid"
@@ -1020,7 +1046,7 @@ class SessionStatistic(object):
                         fullMsg = fullMsg + '\n\n' + self.formatString(msg, self.impact)
 
                 self.messagePanel = fullMsg
-
+               
                 if self.tanks and self.enableByTankPanel:
                     msg = self.config.get('byTankTitlePanel', '')
                     row = self.config.get('byTankStatsPanel', '')
@@ -1081,13 +1107,12 @@ class SessionStatistic(object):
         except:
             LOG_CURRENT_EXCEPTION()
         finally:
-            LOG_NOTE('updateMessage end')
+            if d: LOG_NOTE('updateMessage end')
 
     def replaceBattleResultMessage(self, item, arenaUniqueID):
         if arenaUniqueID in self.battleStats:
             message = unicode(item['message'], 'utf-8')
-            if self.config.get('debugBattleResultMessage', False):
-                LOG_NOTE(message)
+            if d: LOG_NOTE(message)
             stats = self.battleStats[arenaUniqueID]
             values = stats['values']
             for pattern in self.battleStatPatterns:
@@ -1130,6 +1155,7 @@ class SessionStatistic(object):
 
     def getAccountStats(self):
         vehiclesStatistics = []
+        accountTanks = {}
         for intCD, dossier in g_itemsCache.items.getVehicleDossiersIterator():
             s = VehicleDossier(dossier, intCD).getRandomStats()
             try:
@@ -1149,24 +1175,29 @@ class SessionStatistic(object):
                   'vehicle-long': vt.userString,
                 })
                 vehiclesStatistics.append(v)
-        self.account = self.calcWN8(vehiclesStatistics, False)
+                accountTanks[str(intCD)] = self.calcWN8([v], fromBattleResult=False)['values']
+        if d: LOG_NOTE("got account stats from %d vehicles" % len(vehiclesStatistics))
+        self.account = self.calcWN8(vehiclesStatistics, fromBattleResult=False)
         self.account['_type'] = 'account'
-        self.save()
+        self.accountTanks = accountTanks
+        self.accountTanks['_type'] = 'accountTanks'
+        if not self.fastCache:
+            self.save()
 
 
 def handleLobbyViewLoaded(_):
-    LOG_NOTE('handleLobbyViewLoaded start')
+    if d: LOG_NOTE('handleLobbyViewLoaded start')
     stat.load()
     stat.battleResultsAvailable.set()
-    LOG_NOTE('handleLobbyViewLoaded end')
+    if d: LOG_NOTE('handleLobbyViewLoaded end')
 
 g_eventBus.addListener(events.GUICommonEvent.LOBBY_VIEW_LOADED, handleLobbyViewLoaded)
 
 def onAccountBecomeNonPlayer():
     # TODO why it triggers twice???
-    #LOG_NOTE('onAccountBecomeNonPlayer start')
+    #if d: LOG_NOTE('onAccountBecomeNonPlayer start')
     stat.battleResultsAvailable.clear()
-    #LOG_NOTE('onAccountBecomeNonPlayer end')
+    #if d: LOG_NOTE('onAccountBecomeNonPlayer end')
 
 g_playerEvents.onAccountBecomeNonPlayer += onAccountBecomeNonPlayer
 
@@ -1477,7 +1508,7 @@ collections_by_type.SERVER_FORMATTERS[mt_battleResults] = DummyBattleResultsForm
 def onChatMessageReceived(id, message):
     if message.type==mt_battleResults:
         arenaUniqueID = message.data.get('arenaUniqueID', 0)
-        LOG_NOTE('putting new arenaUniqueID onto the queue %s' % str(arenaUniqueID))
+        if d: LOG_NOTE('putting new arenaUniqueID onto the queue %s' % str(arenaUniqueID))
         stat.queue.put((arenaUniqueID, lambda: createBattleResultMessage(arenaUniqueID, message)))
         if hasattr(BigWorld.player(), 'arena') and stat.config.get('enableBattleEndedMessage', True):
             if BigWorld.player().arena.arenaUniqueID != arenaUniqueID:
@@ -1535,13 +1566,20 @@ from gui.battle_control import avatar_getter
 def new__BattleSessionProvider__pe_onBattleResultsReceived(self, isActiveVehicle, _):
     if isActiveVehicle:
         arenaUniqueID = self._BattleSessionProvider__arenaVisitor.getArenaUniqueID()
-        LOG_NOTE('Try to exit from arena', arenaUniqueID)
+        if d: LOG_NOTE('Try to exit from arena', arenaUniqueID)
         if arenaUniqueID:
             #self.__ctx.lastArenaUniqueID = arenaUniqueID
             stat.lastArenaUniqueID = arenaUniqueID
         avatar_getter.leaveArena()
 
 BattleSessionProvider._BattleSessionProvider__pe_onBattleResultsReceived = new__BattleSessionProvider__pe_onBattleResultsReceived
+
+def connectionManager_onDisconnected():
+    if d: LOG_NOTE("connectionManager.onDisconnected")
+    if stat.fastCache:
+        stat.save()
+    
+connectionManager.onDisconnected += connectionManager_onDisconnected
 
 stat = SessionStatistic()
 
@@ -1553,7 +1591,6 @@ if stat.configIsValid and stat.enableResearchWatchdog:
     config = stat.config.get("researchWatchdog", {})
     if config:
         from items import ITEM_TYPE_INDICES, ITEM_TYPE_NAMES
-        from skeletons.connection_mgr import IConnectionManager
         from CurrentVehicle import g_currentVehicle
         from gui.Scaleform.daapi.view.lobby.techtree import dumpers
         from gui.Scaleform.daapi.view.lobby.techtree.settings import NODE_STATE
@@ -1688,5 +1725,4 @@ if stat.configIsValid and stat.enableResearchWatchdog:
 
         config.update(config.get(getClientLanguage(), config.get("en", {})))
         itemTypeNames = config.get("itemTypeNames", ITEM_TYPE_NAMES)
-        connectionManager = dependency.instance(IConnectionManager)
         connectionManager.onConnected += connectionManager_onConnected
