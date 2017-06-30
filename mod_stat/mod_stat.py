@@ -1455,10 +1455,6 @@ def VehicleParameters_onParamClick(self, paramID):
         self._expandedGroups[paramID] = isOpened
     self._setDPUseAnimAndRebuild(False)
 
-old_getFormattedParams = _VehParamsGenerator.getFormattedParams
-VehicleParameters.__init__ = VehicleParameters__init__
-VehicleParameters.onParamClick = VehicleParameters_onParamClick
-
 def setHandlers(stat):
     if stat.useMessenger:
         NotificationListView._NotificationListView__getMessagesList = new_nlv_getMessagesList
@@ -1467,9 +1463,10 @@ def setHandlers(stat):
         NotificationPopUpViewer.onClickAction = new_onClickPopup
         NotificationPopUpViewer._NotificationPopUpViewer__sendMessageForDisplay = new_npuv_sendMessageForDisplay
     if stat.useParametersPanel:
+        VehicleParameters.__init__ = VehicleParameters__init__
+        VehicleParameters.onParamClick = VehicleParameters_onParamClick
         _VehParamsGenerator.getFormattedParams = getFormattedParams
-    else:
-        _VehParamsGenerator.getFormattedParams = old_getFormattedParams
+
     refreshPanelDisplay()
 
 from gui.battle_results.service import BattleResultsService
