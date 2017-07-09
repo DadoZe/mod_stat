@@ -931,13 +931,15 @@ class SessionStatistic(object):
         values['avgMileage'] = int(values['avgMileage'])
 
         if battles:
-            if forTank:
+            if forTank: #and not fromBattleResult:
                 sIdNum = str(idNum)
                 if sIdNum in self.accountTanks:
+                    if d: MYLOG("sIdNum in self.accountTanks")
                     accountTank = self.accountTanks[sIdNum]
                     for key in ['avgWinRate', 'EFF', 'WN8']:
                         values['d' + key] = (values[key] * values['battlesCount'] + accountTank[key] * accountTank['battlesCount']) / (values['battlesCount'] + accountTank['battlesCount']) - accountTank[key]
                 else:
+                    if d: MYLOG("sIdNum not in self.accountTanks - first battle in that tank?")
                     accountTank = values
                     self.accountTanks[sIdNum] = accountTank
                     for key in ['avgWinRate', 'EFF', 'WN8']:
@@ -1697,6 +1699,7 @@ if stat.configIsValid and stat.enableResearchWatchdog:
                 for key in userMacros.keys():
                     researchWatchdogMsg = researchWatchdogMsg.replace('{{%s}}' % key, userMacros[key])
             if lastResearchWatchdogMsg != researchWatchdogMsg:
+                if d: MYLOG(researchWatchdogMsg)
                 refreshPanelDisplay()
             #_LOG_EXECUTING_TIME(startTime, 'onXpChanged')
             
@@ -1705,7 +1708,7 @@ if stat.configIsValid and stat.enableResearchWatchdog:
 
         def trunc(data):
             maxlen = config.get("maxCharsPerItem", 50)
-            return (data[:maxlen] + config.get("cutOffSymbol", '..')) if len(data) > maxlen else data
+            return ((data[:maxlen] + config.get("cutOffSymbol", '..')) if len(data) > maxlen else data).replace('\n', ' ')
             
         def itemTypeName(itemTypeID):
             try:
