@@ -367,11 +367,11 @@ class SessionStatistic(object):
             death = 1 if int(personal['deathReason']) > -1 else 0
             teamResources = 0
             teamInfluencePoints = 0
-            if personal['fortResource'] is None:
+            if not 'fortResource' in personal:
                 fortResource = 0
             else:
                 fortResource = int(personal['fortResource'])
-            if personal['influencePoints'] is None:
+            if not 'influencePoints' in personal:
                 influencePoints = 0
             else:
                 influencePoints = int(personal['influencePoints'])
@@ -394,8 +394,10 @@ class SessionStatistic(object):
                 if personal['team'] == vehicle[0]['team'] and personal['originalXP'] < vehicle[0]['xp']:
                     place += 1
                 if personal['team'] == vehicle[0]['team']:
-                    teamResources += vehicle[0]['fortResource']
-                    teamInfluencePoints += vehicle[0]['influencePoints']
+                    if 'fortResource' in vehicle[0]:
+                        teamResources += vehicle[0]['fortResource']
+                    if 'influencePoints' in vehicle[0]:
+                        teamInfluencePoints += vehicle[0]['influencePoints']
 
             battleTier = 11 if max(squadsTier.values()) == 10 and min(squadsTier.values()) == 9 else max(squadsTier.values())
             proceeds = personal['credits'] - personal['autoRepairCost'] - personal['autoEquipCost'][0] - personal['autoLoadCost'][0]
