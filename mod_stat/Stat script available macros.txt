@@ -132,6 +132,8 @@
     16 FORT_BATTLE_2         Stronghold Advances (after 0.9.17.1)
     17 RANKED                Ranked Battles
     18 BOOTCAMP              Bootcamp
+    19 EPIC_RANDOM           Grand Battles
+    20 EPIC_RANDOM_TRAINING  Grand Battles Training
 
    Decimal places and right alignment of macros
     :d                       Macro without decimal ({{deathsRate:d}} will be displayed '63')
