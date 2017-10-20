@@ -30,10 +30,10 @@ from xml.dom.minidom import parseString
 
 GENERAL = 0
 BY_TANK = 1
-VERSION = '0.9.19.0.2'
+VERSION = '0.9.20.1'
 URLLINK = 'http://bit.ly/YasenKrasen'
 
-print 'Loading mod: YasenKrasen Session Statistics '' + VERSION + '' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
+print 'Loading mod: YasenKrasen Session Statistics ' + VERSION + ' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
 
 def hexToRgb(hex):
     return [int(hex[i:i+2], 16) for i in range(1,6,2)]
@@ -239,16 +239,6 @@ class SessionStatistic(object):
         result = 1 if int(personal['team']) == int(value['common']['winnerTeam'])\
             else (0 if not int(value['common']['winnerTeam']) else -1)
         death = 1 if int(personal['deathReason']) > -1 else 0
-        teamResources = 0
-        teamInfluencePoints = 0
-        if personal['fortResource'] is None:
-            fortResource = 0
-        else:
-            fortResource = int(personal['fortResource'])
-        if personal['influencePoints'] is None:
-            influencePoints = 0
-        else:
-            influencePoints = int(personal['influencePoints'])
         place = 1
         arenaUniqueID = value['arenaUniqueID']
         squadsTier = {}
@@ -267,9 +257,6 @@ class SessionStatistic(object):
                 squadsTier[squadID] = max(squadsTier.get(squadID, 0), tier)
             if personal['team'] == vehicle[0]['team'] and personal['originalXP'] < vehicle[0]['xp']:
                 place += 1
-            if personal['team'] == vehicle[0]['team']:
-                teamResources += vehicle[0]['fortResource']
-                teamInfluencePoints += vehicle[0]['influencePoints']
         battleTier = 11 if max(squadsTier.values()) == 10 and min(squadsTier.values()) == 9 \
             else max(squadsTier.values())
         proceeds = personal['credits'] - personal['autoRepairCost'] -\
@@ -290,10 +277,6 @@ class SessionStatistic(object):
             'potDamageRec': personal['potentialDamageReceived'],
             'deathsCount': death,
             'frag': personal['kills'],
-            'fortResource': fortResource,
-            'teamResources' : teamResources,
-            'influencePoints': influencePoints,
-            'teamInfluencePoints' : teamInfluencePoints,
             'mileage': personal['mileage'],
             'spot': personal['spotted'],
             'def': personal['droppedCapturePoints'],
@@ -455,10 +438,10 @@ class SessionStatistic(object):
         places = []
         totalBattleTier = 0
         valuesKeys = ['winsCount', 'defeatsCount', 'drawsCount', 'dailyXPFactor', 'totalDmg', 'totalDmgRec', 'totalMileage', 'totalMileagekm', 'totalPotDmgRec', 'totalDeathsCount', 'totalFrag', 'totalShots', 'totalHits', 'totalPierced', 'totalSpot', 'totalDef', 'totalCap',\
-            'totalAssist', 'totalDmgAssistTrack', 'totalDmgAssistRadio', 'totalXP', 'allXP', 'totalOriginXP', 'totalFreeXP', 'totalOriginalFreeXP', 'totalOriginPremXP', 'totalTmenXP', 'totalEventTmenXP', 'totalResources', 'totalTeamResources', 'totalInfluence', 'totalTeamInfluence',\
-            'autoRepairCost', 'autoLoadCost', 'autoEquipCost', 'service', 'grossCredits', 'netCredits', 'grossGold', 'netGold', 'autoRepairGBMCost', 'autoLoadGBMCost', 'autoEquipGBMCost', 'place', 'battlesCountSpecial', 'battlesCountRandom', 'battlesCountTraining', 'battlesCountCompany',\
-            'battlesCountTutorial', 'battlesCountTeam', 'battlesCountFallout', 'battlesCountEvents', 'battlesCountStrongholdSkirmishOld', 'battlesCountStronghold', 'battlesCountRatedTeam', 'battlesCountRatedSandbox', 'battlesCountSandbox', 'battlesCountFalloutClassic', 'battlesCountFalloutMultiteam',\
-            'battlesCountStrongholdSkirmish', 'battlesCountStrongholdAdvances', 'battlesCountRanked']
+            'totalAssist', 'totalDmgAssistTrack', 'totalDmgAssistRadio', 'totalXP', 'allXP', 'totalOriginXP', 'totalFreeXP', 'totalOriginalFreeXP', 'totalOriginPremXP', 'totalTmenXP', 'totalEventTmenXP', 'autoRepairCost', 'autoLoadCost', 'autoEquipCost', 'service',\
+            'grossCredits', 'netCredits', 'grossGold', 'netGold', 'autoRepairGBMCost', 'autoLoadGBMCost', 'autoEquipGBMCost', 'place', 'battlesCountSpecial', 'battlesCountRandom', 'battlesCountTraining', 'battlesCountTutorial', 'battlesCountTeam', 'battlesCountFallout',\
+            'battlesCountEvents', 'battlesCountRatedSandbox', 'battlesCountSandbox', 'battlesCountFalloutClassic', 'battlesCountFalloutMultiteam', 'battlesCountStrongholdSkirmish', 'battlesCountStrongholdAdvances', 'battlesCountRanked', 'battlesCountBootcamp',\
+            'battlesCountEpicRandom', 'battlesCountEpicRandomTraining']
         for key in valuesKeys:
             values[key] = 0
         expKeys = ['expDamage', 'expFrag', 'expSpot', 'expDef', 'expWinRate']
@@ -466,10 +449,10 @@ class SessionStatistic(object):
         for key in expKeys:
             expValues['total_' + key] = 0.0
         resCounters = {-1: 'defeatsCount', 0: 'drawsCount', 1: 'winsCount'}
-        battleCounters = {0: 'battlesCountSpecial', 1: 'battlesCountRandom', 2: 'battlesCountTraining', 3: 'battlesCountCompany', 4: 'battlesCountTutorial',\
-            5: 'battlesCountTeam', 6: 'battlesCountFallout', 7: 'battlesCountEvents', 8: 'battlesCountStrongholdSkirmishOld', 9: 'battlesCountStronghold',\
-            10: 'battlesCountRatedTeam', 11: 'battlesCountRatedSandbox', 12: 'battlesCountSandbox', 13: 'battlesCountFalloutClassic', 14: 'battlesCountFalloutMultiteam',\
-            15: 'battlesCountStrongholdSkirmish', 16: 'battlesCountStrongholdAdvances', 17: 'battlesCountRanked'}
+        battleCounters = {0: 'battlesCountSpecial', 1: 'battlesCountRandom', 2: 'battlesCountTraining', 4: 'battlesCountTutorial', 5: 'battlesCountTeam',\
+            6: 'battlesCountFallout', 7: 'battlesCountEvents', 11: 'battlesCountRatedSandbox', 12: 'battlesCountSandbox', 13: 'battlesCountFalloutClassic',\
+            14: 'battlesCountFalloutMultiteam', 15: 'battlesCountStrongholdSkirmish', 16: 'battlesCountStrongholdAdvances', 17: 'battlesCountRanked',\
+            18: 'battlesCountBootcamp', 19: 'battlesCountEpicRandom', 20: 'battlesCountEpicRandomTraining'}
         for battle in battles:
             values[resCounters[battle['result']]] += 1
             values[battleCounters[battle['gametype']]] += 1
@@ -495,10 +478,6 @@ class SessionStatistic(object):
             values['totalOriginalFreeXP'] += battle['originalFreeXP']
             values['totalTmenXP'] += battle['tmenXP']
             values['totalEventTmenXP'] += battle['eventTmenXP']
-            values['totalResources'] += battle['fortResource']
-            values['totalTeamResources'] += battle['teamResources']
-            values['totalInfluence'] += battle['influencePoints']
-            values['totalTeamInfluence'] += battle['teamInfluencePoints']
             values['totalMileage'] += battle['mileage']
             values['totalMileagekm'] += battle['mileage']/float(1000)
             values['autoRepairCost'] = battle['autoRepairCost']
@@ -559,16 +538,6 @@ class SessionStatistic(object):
             values['avgTier'] = float(totalTier)/values['battlesCount']
             values['avgBattleTier'] = float(totalBattleTier)/values['battlesCount']
             values['avgPlace'] = round(float(totalPlace)/values['battlesCount'], 1)
-            if values['battlesCountStrongholdSkirmish'] > 0:
-                values['avgResources'] = int(values['totalResources']/values['battlesCountStrongholdSkirmish'])
-                values['avgTeamResources'] = int(values['totalTeamResources']/values['battlesCountStrongholdSkirmish'])
-                values['avgInfluence'] = int(values['totalInfluence']/values['battlesCountStrongholdSkirmish'])
-                values['avgTeamInfluence'] = int(values['totalTeamInfluence']/values['battlesCountStrongholdSkirmish'])
-            else:
-                values['avgResources'] = 0
-                values['avgTeamResources'] = 0
-                values['avgInfluence'] = 0
-                values['avgTeamInfluence'] = 0
             places = sorted(places)
             length = len(places)
             values['medPlace'] = (places[length/2] +places[length/2 - 1])/2.0  if not length % 2\
@@ -605,8 +574,8 @@ class SessionStatistic(object):
                 ((values['avgDmgAssistTrack']/2)*(0.2 + 1.5/values['avgTier'])) + \
                 values['avgSpot'] * 200 + values['avgCap'] * 15 + values['avgDef'] * 15 ))
         else:
-            for key in ['avgResources', 'avgTeamResources', 'avgInfluence', 'avgTeamInfluence', 'avgWinRate', 'avgDamage', 'avgDamageRec', 'avgMileage', 'avgMileagekm', 'avgPotDmgRec', 'survivalRate', 'deathsRate', 'avgDeathsCount',\
-                'avgFrag', 'avgShots', 'hitsRate', 'effHitsRate', 'avgSpot', 'avgDef', 'avgCap', 'avgAssist', 'avgDmgAssistTrack', 'avgDmgAssistRadio', 'avgXP', 'avgOriginalXP', 'avgOriginalPremXP', 'avgFreeXP', 'avgOriginalFreeXP',\
+            for key in ['avgWinRate', 'avgDamage', 'avgDamageRec', 'avgMileage', 'avgMileagekm', 'avgPotDmgRec', 'survivalRate', 'deathsRate', 'avgDeathsCount', 'avgFrag', 'avgShots', 'hitsRate',\
+                'effHitsRate', 'avgSpot', 'avgDef', 'avgCap', 'avgAssist', 'avgDmgAssistTrack', 'avgDmgAssistRadio', 'avgXP', 'avgOriginalXP', 'avgOriginalPremXP', 'avgFreeXP', 'avgOriginalFreeXP',\
                 'avgTmenXP', 'avgEventTmenXP', 'avgNetCredits', 'avgGrossCredits', 'avgService', 'avgTier', 'avgBattleTier', 'medPlace', 'avgPlace', 'WN6', 'XWN6', 'WN7', 'XWN7', 'EFF', 'XEFF', 'BR']:
                 values[key] = 0
             for key in expKeys:

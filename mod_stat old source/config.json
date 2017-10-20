@@ -101,7 +101,7 @@
         "Spotted.png": "<img src='img://gui/maps/icons/library/YasenKrasen/detection.png' width='13' height='13' align='baseline' vspace='-2'>",
         "Defence.png": "<img src='img://gui/maps/icons/library/YasenKrasen/defence.png' width='13' height='13' align='baseline' vspace='-4'>",
         "Capture.png": "<img src='img://gui/maps/icons/library/YasenKrasen/capture.png' width='13' height='13' align='baseline' vspace='-4'>",
-        "Complete.png": "<img src='img://gui/maps/icons/library/YasenKrasen/complete.png' width='13' height='13' align='baseline' vspace='-2'>",
+        "Done.png": "<img src='img://gui/maps/icons/library/YasenKrasen/done.png' width='13' height='13' align='baseline' vspace='-2'>",
         "buttonGeneralOn": "<a href='event'><img src='img://gui/maps/icons/library/YasenKrasen/btn_general_on.png' width='71' height='30' align='baseline' vspace='0'></a>",
         "buttonTankOn": "<a href='event'><img src='img://gui/maps/icons/library/YasenKrasen/btn_tank_on.png' width='71' height='30' align='baseline' vspace='0'></a>"
     },

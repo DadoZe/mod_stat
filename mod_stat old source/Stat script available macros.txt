@@ -15,7 +15,6 @@
     avgFrag                  Average number of kills                                               totalFrag / battlesCount
     avgFreeXP                Average free xp received (premium and daily xp factor included)       totalFreeXP / battlesCount
     avgGrossCredits          Average credits received from battles                                 grossCredits / battlesCount
-    avgInfluence             Average influence from Stronghold battles                             totalInfluence / battlesCountStrongholdSkirmish
     avgMileage               Average mileage in meters                                             totalMileage / battlesCount
     avgMileagekm             Average mileage in kilometers                                         totalMileage / battlesCount / 1000
     avgNetCredits            Average credits received from battles after repairs and resupplies    netCredits / battlesCount
@@ -24,12 +23,9 @@
     avgOriginalXP            Average original xp received (premium excluded)                       totalOriginXP / battlesCount
     avgPlace                 Average place in battles fought                                       totalPlace / battlesCount
     avgPotDmgRec             Average potential damage received                                     totalPotDmgRec / battlesCount
-    avgResources             Average resources from Stronghold battles                             totalResources / battlesCountStrongholdSkirmish
     avgService               Average service from battle                                           service / battlesCount
     avgShots                 Average number of shots                                               totalShots / battlesCount
     avgSpot                  Average number of spotted enemies                                     totalSpot / battlesCount
-    avgTeamInfluence         Average influence from Stronghold battles by team                     totalTeamInfluence / battlesCountStrongholdSkirmish
-    avgTeamResources         Average resources from Stronghold battles by team                     totalTeamResources / battlesCountStrongholdSkirmish
     avgTier                  Average tier of own tanks fought with                                 totalTier / battlesCount
     avgTmenXP                Average xp received for crew members                                  totalTmenXP / battlesCount
     avgWinRate               Average wins in percent                                               winsCount / battlesCount * 100
@@ -80,7 +76,6 @@
     totalFrag                Total kills
     totalFreeXP              Total free xp (premium and daily xp factor included)
     totalHits                Total hits
-    totalInfluence           Total influence from Stronghold battles
     totalMileage             Total mileage in meters
     totalMileagekm           Total mileage in kilometers
     totalOriginalFreeXP      Total original free xp received (premium excluded)
@@ -88,11 +83,8 @@
     totalOriginPremXP        Total original xp received (premium included)
     totalPierced             Total shots pierced
     totalPotDmgRec           Total potential damage received
-    totalResources           Total resources from Stronghold battles
     totalShots               Total shots
     totalSpot                Total spotting
-    totalTeamInfluence       Total influence from Stronghold battles by team
-    totalTeamResources       Total resources from Stronghold battles by team
     totalTmenXP              Total xp received for crew members
     totalXP                  Total xp received
     vehicle-long             Translated long vehicle name (M18 Hellcat)
@@ -118,14 +110,14 @@
      0 UNKNOWN               Special Battle (Clan War, Tournament etc.)
      1 RANDOM                Random Battle
      2 TRAINING              Team Training
-     3 COMPANY               Tank Company Battle
+     3 COMPANY               Tank Company Battle                                                   Removed
      4 TUTORIAL              Tutorial
      5 CYBERSPORT            Team Battle (Unranked)
      6 FALLOUT               Rampage
      7 EVENT_BATTLES         Event Battle (8-bit, Tank Football etc.)
-     8 SORTIE                Stronghold Skirmishes (before 0.9.17.1)
-     9 FORT_BATTLE           Stronghold Battle (before 0.9.17.1)
-    10 RATED_CYBERSPORT      Team Battle (Ranked)
+     8 SORTIE                Stronghold Skirmishes (before 0.9.17.1)                               Removed
+     9 FORT_BATTLE           Stronghold Battle (before 0.9.17.1)                                   Removed
+    10 RATED_CYBERSPORT      Team Battle (Ranked)                                                  Removed
     11 RATED_SANDBOX         Proving Ground <10 battles
     12 SANDBOX               Proving Ground >10 battles
     13 FALLOUT_CLASSIC       Domination
@@ -133,6 +125,9 @@
     15 SORTIE_2              Stronghold Skirmishes (after 0.9.17.1)
     16 FORT_BATTLE_2         Stronghold Advances (after 0.9.17.1)
     17 RANKED                Ranked Battles
+    18 BOOTCAMP              Bootcamp
+    19 EPIC_RANDOM           Grand Battles
+    20 EPIC_RANDOM_TRAINING  Grand Battles Training
 
    Decimal places and right alignment of macros
     :d                       Macro without decimal ({{deathsRate:d}} will be displayed '63')
