@@ -1457,7 +1457,8 @@ from messenger.formatters.service_channel import BattleResultsFormatter
 class DummyBattleResultsFormatter(BattleResultsFormatter):
     @async
     def format(self, message, callback):
-        callback(('', None))
+        #callback(('', None))
+        callback([])
 
 battleResults_formatter = collections_by_type.SERVER_FORMATTERS[mt_battleResults]
 collections_by_type.SERVER_FORMATTERS[mt_battleResults] = DummyBattleResultsFormatter()
@@ -1500,19 +1501,22 @@ g_messengerEvents.serviceChannel.onChatMessageReceived += onChatMessageReceived
 
 @process
 def createBattleResultMessage(arenaUniqueID, message):
-    formatted, settings = yield battleResults_formatter.format(message)
-    if stat.config.get('showStatForBattle', True):
-        stat.replaceBattleResultMessage(formatted, arenaUniqueID)
-    # code from ServiceChannelManager.__addServerMessage
-    serviceChannelManager = MessengerEntry.g_instance.protos.BW.serviceChannel
-    clientID = serviceChannelManager._ServiceChannelManager__idGenerator.next()
-    serviceChannelManager._ServiceChannelManager__messages.append((clientID, (True, formatted, settings)))
-    serviceChannelManager._ServiceChannelManager__unreadMessagesCount += 1
-    serviceChannelEvents = g_messengerEvents.serviceChannel
-    serviceChannelEvents.onServerMessageReceived(clientID, formatted, settings)
-    customEvent = settings.getCustomEvent()
-    if customEvent is not None:
-        serviceChannelEvents.onCustomMessageDataReceived(clientID, customEvent)
+    messagesListData = yield battleResults_formatter.format(message)
+    for mData in messagesListData:
+      if mData.data:
+        formatted, settings = mData
+        if stat.config.get('showStatForBattle', True):
+            stat.replaceBattleResultMessage(formatted, arenaUniqueID)
+        # code from ServiceChannelManager.__addServerMessage
+        serviceChannelManager = MessengerEntry.g_instance.protos.BW.serviceChannel
+        clientID = serviceChannelManager._ServiceChannelManager__idGenerator.next()
+        serviceChannelManager._ServiceChannelManager__messages.append((clientID, (True, formatted, settings)))
+        serviceChannelManager._ServiceChannelManager__unreadMessagesCount += 1
+        serviceChannelEvents = g_messengerEvents.serviceChannel
+        serviceChannelEvents.onServerMessageReceived(clientID, formatted, settings)
+        customEvent = settings.getCustomEvent()
+        if customEvent is not None:
+            serviceChannelEvents.onCustomMessageDataReceived(clientID, customEvent)
 
 def showConfirmDialog(message, callback):
     DialogsInterface.showDialog(SimpleDialogMeta(title="Confirm", message=message, buttons=I18nConfirmDialogButtons()), callback)
