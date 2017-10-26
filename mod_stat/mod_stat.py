@@ -48,7 +48,7 @@ connectionManager = dependency.instance(IConnectionManager)
 
 GENERAL = 0
 BY_TANK = 1
-VERSION = '0.9.20.1 beta'
+VERSION = '0.9.20.1.1 beta'
 URLLINK = 'http://bit.ly/YasenKrasen'
 
 print 'Loading mod: YasenKrasen Session Statistics ' + VERSION + ' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
@@ -644,7 +644,8 @@ class SessionStatistic(object):
          'battlesCountRanked',
          'battlesCountBootcamp',
          'battlesCountEpicRandom',
-         'battlesCountEpicRandomTraining']
+         'battlesCountEpicRandomTraining',
+         'battlesCountEvents2']
         for key in valuesKeys:
             values[key] = 0
 
@@ -673,7 +674,8 @@ class SessionStatistic(object):
          17: 'battlesCountRanked',
          18: 'battlesCountBootcamp',
          19: 'battlesCountEpicRandom',
-         20: 'battlesCountEpicRandomTraining'}
+         20: 'battlesCountEpicRandomTraining',
+         21: 'battlesCountEvents2'}
         for battle in battles:
             battlesCount = 1
             if fromBattleResult:
