@@ -128,6 +128,7 @@
     18 BOOTCAMP              Bootcamp
     19 EPIC_RANDOM           Grand Battles
     20 EPIC_RANDOM_TRAINING  Grand Battles Training
+    21 EVENT_BATTLES_2       Event Battles (after 0.9.20.1.1)
 
    Decimal places and right alignment of macros
     :d                       Macro without decimal ({{deathsRate:d}} will be displayed '63')

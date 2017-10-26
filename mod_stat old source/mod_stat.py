@@ -30,7 +30,7 @@ from xml.dom.minidom import parseString
 
 GENERAL = 0
 BY_TANK = 1
-VERSION = '0.9.20.1'
+VERSION = '0.9.20.1.1'
 URLLINK = 'http://bit.ly/YasenKrasen'
 
 print 'Loading mod: YasenKrasen Session Statistics ' + VERSION + ' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
@@ -441,7 +441,7 @@ class SessionStatistic(object):
             'totalAssist', 'totalDmgAssistTrack', 'totalDmgAssistRadio', 'totalXP', 'allXP', 'totalOriginXP', 'totalFreeXP', 'totalOriginalFreeXP', 'totalOriginPremXP', 'totalTmenXP', 'totalEventTmenXP', 'autoRepairCost', 'autoLoadCost', 'autoEquipCost', 'service',\
             'grossCredits', 'netCredits', 'grossGold', 'netGold', 'autoRepairGBMCost', 'autoLoadGBMCost', 'autoEquipGBMCost', 'place', 'battlesCountSpecial', 'battlesCountRandom', 'battlesCountTraining', 'battlesCountTutorial', 'battlesCountTeam', 'battlesCountFallout',\
             'battlesCountEvents', 'battlesCountRatedSandbox', 'battlesCountSandbox', 'battlesCountFalloutClassic', 'battlesCountFalloutMultiteam', 'battlesCountStrongholdSkirmish', 'battlesCountStrongholdAdvances', 'battlesCountRanked', 'battlesCountBootcamp',\
-            'battlesCountEpicRandom', 'battlesCountEpicRandomTraining']
+            'battlesCountEpicRandom', 'battlesCountEpicRandomTraining', 'battlesCountEvents2']
         for key in valuesKeys:
             values[key] = 0
         expKeys = ['expDamage', 'expFrag', 'expSpot', 'expDef', 'expWinRate']
@@ -452,7 +452,7 @@ class SessionStatistic(object):
         battleCounters = {0: 'battlesCountSpecial', 1: 'battlesCountRandom', 2: 'battlesCountTraining', 4: 'battlesCountTutorial', 5: 'battlesCountTeam',\
             6: 'battlesCountFallout', 7: 'battlesCountEvents', 11: 'battlesCountRatedSandbox', 12: 'battlesCountSandbox', 13: 'battlesCountFalloutClassic',\
             14: 'battlesCountFalloutMultiteam', 15: 'battlesCountStrongholdSkirmish', 16: 'battlesCountStrongholdAdvances', 17: 'battlesCountRanked',\
-            18: 'battlesCountBootcamp', 19: 'battlesCountEpicRandom', 20: 'battlesCountEpicRandomTraining'}
+            18: 'battlesCountBootcamp', 19: 'battlesCountEpicRandom', 20: 'battlesCountEpicRandomTraining', 21: 'battlesCountEvents2'}
         for battle in battles:
             values[resCounters[battle['result']]] += 1
             values[battleCounters[battle['gametype']]] += 1
