@@ -30,7 +30,7 @@ from xml.dom.minidom import parseString
 
 GENERAL = 0
 BY_TANK = 1
-VERSION = '0.9.20.1.1'
+VERSION = '0.9.20.1.4'
 URLLINK = 'http://bit.ly/YasenKrasen'
 
 print 'Loading mod: YasenKrasen Session Statistics ' + VERSION + ' (http://forum.worldoftanks.eu/index.php?/topic/583433-)'
@@ -50,7 +50,7 @@ class SessionStatistic(object):
 
     def __init__(self):
         self.page = GENERAL
-        self.cacheVersion = 9
+        self.cacheVersion = 10
         self.queue = Queue()
         self.loaded = False
         self.configIsValid = True
@@ -91,7 +91,7 @@ class SessionStatistic(object):
         self.readConfig()
 
         if self.config.get('updateExpectedTankValues', True):
-            expurl = self.config.get('urlForExpectedTankValues', 'http://www.wnefficiency.net/exp/expected_tank_values_latest.json')
+            expurl = self.config.get('urlForExpectedTankValues', 'https://static.modxvm.com/wn8-data-exp/json/wn8exp.json')
             try:
                 expfile = json.load(open(self.expectedValuesPath))
                 verfile = json.dumps(expfile['header']['version'])
@@ -103,8 +103,9 @@ class SessionStatistic(object):
                 verdata = json.dumps(expdata['header']['version'])
                 if verfile != verdata:
                     urllib.urlretrieve(expurl, self.expectedValuesPath)
-                    print '[mod_stat] expected_tank_values.json updated to v' + verdata + '.'
-                    SystemMessages.pushMessage("<font color='#BFE9FF'>Yasen</font><font color='#FF3333'>Krasen</font> Info!\n\nExpected Tank Values updated to v" + verdata + ".\n", type=SystemMessages.SM_TYPE.Warning)
+                    print '[mod_stat] expected_tank_values.json updated to ' + verdata + '.'
+                    if self.config.get('updateInfoExpectedTankValues', True):
+                        SystemMessages.pushMessage("<font color='#BFE9FF'>Yasen</font><font color='#FF3333'>Krasen</font> Info!\n\nExpected Tank Values updated to:\n" + verdata + "\n", type=SystemMessages.SM_TYPE.Warning)
             except:
                 print '[mod_stat] Unable to access ' + expurl + '.'
 
@@ -257,8 +258,7 @@ class SessionStatistic(object):
                 squadsTier[squadID] = max(squadsTier.get(squadID, 0), tier)
             if personal['team'] == vehicle[0]['team'] and personal['originalXP'] < vehicle[0]['xp']:
                 place += 1
-        battleTier = 11 if max(squadsTier.values()) == 10 and min(squadsTier.values()) == 9 \
-            else max(squadsTier.values())
+        battleTier = max(squadsTier.values())
         proceeds = personal['credits'] - personal['autoRepairCost'] -\
                    personal['autoEquipCost'][0] - personal['autoLoadCost'][0]
         tmenXP = personal['tmenXP']
@@ -271,10 +271,10 @@ class SessionStatistic(object):
             'tier': vt.level,
             'result': result,
             'dailyXPFactor': personal['dailyXPFactor10'] / 10,
-            'gametype': value['common']['guiType'],
             'damage': personal['damageDealt'],
             'damageRec': personal['damageReceived'],
             'potDamageRec': personal['potentialDamageReceived'],
+            'damageBlocked': personal['damageBlockedByArmor'],
             'deathsCount': death,
             'frag': personal['kills'],
             'mileage': personal['mileage'],
@@ -298,11 +298,16 @@ class SessionStatistic(object):
             'service': personal['autoEquipCost'][0] + personal['autoLoadCost'][0] + personal['autoRepairCost'],
             'grossCredits': personal['credits'],
             'netCredits': proceeds,
+            'crystal': personal['crystal'],
             'grossGold': personal['gold'],
             'netGold': personal['gold'] - personal['autoEquipCost'][1] - personal['autoLoadCost'][1],
             'battleTier': battleTier,
             'damageAssistedRadio': personal['damageAssistedRadio'],
             'damageAssistedTrack': personal['damageAssistedTrack'],
+            'damageAssistedStun': personal['damageAssistedStun'],
+            'stunDuration': personal['stunDuration'],
+            'stunNum': personal['stunNum'],
+            'stunned': personal['stunned'],
             'assist': personal['damageAssistedRadio'] + personal['damageAssistedTrack']
         }
         extended = {
@@ -318,12 +323,12 @@ class SessionStatistic(object):
         }
         if self.config.get('dailyAutoReset', True) and self.startDate != stat.getWorkDate():
             self.reset()
-        if value['common']['guiType'] in self.config.get('battleType', [1]):
+        if value['common']['bonusType'] in self.config.get('battleType', [1]):
             self.battles.append(battle)
             self.save()
             self.updateMessage()
-        (battleStat, gradient, palette) = self.calcWN8([battle])
-        (extGradient, extPalette) = self.refreshColorMacros(extended)
+        battleStat, gradient, palette = self.calcWN8([battle])
+        extGradient, extPalette = self.refreshColorMacros(extended)
         gradient.update(extGradient)
         palette.update(extPalette)
         self.battleStats[arenaUniqueID] = {}
@@ -437,11 +442,9 @@ class SessionStatistic(object):
         totalPlace = 0
         places = []
         totalBattleTier = 0
-        valuesKeys = ['winsCount', 'defeatsCount', 'drawsCount', 'dailyXPFactor', 'totalDmg', 'totalDmgRec', 'totalMileage', 'totalMileagekm', 'totalPotDmgRec', 'totalDeathsCount', 'totalFrag', 'totalShots', 'totalHits', 'totalPierced', 'totalSpot', 'totalDef', 'totalCap',\
-            'totalAssist', 'totalDmgAssistTrack', 'totalDmgAssistRadio', 'totalXP', 'allXP', 'totalOriginXP', 'totalFreeXP', 'totalOriginalFreeXP', 'totalOriginPremXP', 'totalTmenXP', 'totalEventTmenXP', 'autoRepairCost', 'autoLoadCost', 'autoEquipCost', 'service',\
-            'grossCredits', 'netCredits', 'grossGold', 'netGold', 'autoRepairGBMCost', 'autoLoadGBMCost', 'autoEquipGBMCost', 'place', 'battlesCountSpecial', 'battlesCountRandom', 'battlesCountTraining', 'battlesCountTutorial', 'battlesCountTeam', 'battlesCountFallout',\
-            'battlesCountEvents', 'battlesCountRatedSandbox', 'battlesCountSandbox', 'battlesCountFalloutClassic', 'battlesCountFalloutMultiteam', 'battlesCountStrongholdSkirmish', 'battlesCountStrongholdAdvances', 'battlesCountRanked', 'battlesCountBootcamp',\
-            'battlesCountEpicRandom', 'battlesCountEpicRandomTraining', 'battlesCountEvents2']
+        valuesKeys = ['winsCount', 'defeatsCount', 'drawsCount', 'dailyXPFactor', 'totalDmg', 'totalDmgRec', 'totalMileage', 'totalMileagekm', 'totalPotDmgRec', 'totalDamageBlocked', 'totalDeathsCount', 'totalFrag', 'totalShots', 'totalHits', 'totalPierced', 'totalSpot', 'totalDef', 'totalCap',\
+            'totalAssist', 'totalDmgAssistTrack', 'totalDmgAssistRadio', 'totalDmgAssistedStun', 'totalStunDuration', 'totalStunNum', 'totalStunned', 'totalXP', 'allXP', 'totalOriginXP', 'totalFreeXP', 'totalOriginalFreeXP', 'totalOriginPremXP', 'totalTmenXP', 'totalEventTmenXP', 'autoRepairCost',\
+            'autoLoadCost', 'autoEquipCost', 'service', 'grossCredits', 'netCredits', 'totalCrystal', 'grossGold', 'netGold', 'autoRepairGBMCost', 'autoLoadGBMCost', 'autoEquipGBMCost', 'place']
         for key in valuesKeys:
             values[key] = 0
         expKeys = ['expDamage', 'expFrag', 'expSpot', 'expDef', 'expWinRate']
@@ -449,16 +452,12 @@ class SessionStatistic(object):
         for key in expKeys:
             expValues['total_' + key] = 0.0
         resCounters = {-1: 'defeatsCount', 0: 'drawsCount', 1: 'winsCount'}
-        battleCounters = {0: 'battlesCountSpecial', 1: 'battlesCountRandom', 2: 'battlesCountTraining', 4: 'battlesCountTutorial', 5: 'battlesCountTeam',\
-            6: 'battlesCountFallout', 7: 'battlesCountEvents', 11: 'battlesCountRatedSandbox', 12: 'battlesCountSandbox', 13: 'battlesCountFalloutClassic',\
-            14: 'battlesCountFalloutMultiteam', 15: 'battlesCountStrongholdSkirmish', 16: 'battlesCountStrongholdAdvances', 17: 'battlesCountRanked',\
-            18: 'battlesCountBootcamp', 19: 'battlesCountEpicRandom', 20: 'battlesCountEpicRandomTraining', 21: 'battlesCountEvents2'}
         for battle in battles:
             values[resCounters[battle['result']]] += 1
-            values[battleCounters[battle['gametype']]] += 1
             values['totalDmg'] += battle['damage']
             values['totalDmgRec'] += battle['damageRec']
             values['totalPotDmgRec'] += battle['potDamageRec']
+            values['totalDamageBlocked'] += battle['damageBlocked']
             values['totalDeathsCount'] += battle['deathsCount']
             values['totalFrag'] += battle['frag']
             values['totalSpot'] += battle['spot']
@@ -470,6 +469,10 @@ class SessionStatistic(object):
             values['totalAssist'] += battle['assist']
             values['totalDmgAssistTrack'] += battle['damageAssistedTrack']
             values['totalDmgAssistRadio'] += battle['damageAssistedRadio']
+            values['totalDmgAssistedStun'] += battle['damageAssistedStun']
+            values['totalStunDuration'] += battle['stunDuration']
+            values['totalStunNum'] += battle['stunNum']
+            values['totalStunned'] += battle['stunned']
             values['totalXP'] += battle['xp']
             values['allXP'] += battle['xp'] + battle['freeXP']
             values['totalOriginXP'] += battle['originalXP']
@@ -489,6 +492,7 @@ class SessionStatistic(object):
             values['service'] += battle['service']
             values['netCredits'] += battle['netCredits']
             values['grossCredits'] += battle['grossCredits']
+            values['totalCrystal'] += battle['crystal']
             values['grossGold'] += battle['grossGold']
             values['netGold'] += battle['netGold']
             values['place'] = battle['place']
@@ -510,6 +514,7 @@ class SessionStatistic(object):
             values['avgDamage'] = float(values['totalDmg'])/values['battlesCount']
             values['avgDamageRec'] = int(values['totalDmgRec']/values['battlesCount'])
             values['avgPotDmgRec'] = int(values['totalPotDmgRec']/values['battlesCount'])
+            values['avgDamageBlocked'] = int(values['totalDamageBlocked']/values['battlesCount'])
             values['avgDeathsCount'] = 0 if values['totalDeathsCount'] < 1 else float(values['totalDeathsCount'])/values['battlesCount']
             values['avgFrag'] = float(values['totalFrag'])/values['battlesCount']
             values['avgShots'] = float(values['totalShots'])/values['battlesCount']
@@ -525,6 +530,10 @@ class SessionStatistic(object):
             values['avgAssist'] = int(values['totalAssist'])/values['battlesCount']
             values['avgDmgAssistTrack'] = int(values['totalDmgAssistTrack'])/values['battlesCount']
             values['avgDmgAssistRadio'] = int(values['totalDmgAssistRadio'])/values['battlesCount']
+            values['avgDmgAssistedStun'] = int(values['totalDmgAssistedStun'])/values['battlesCount']
+            values['avgStunDuration'] = int(values['totalStunDuration'])/values['battlesCount']
+            values['avgStunNum'] = int(values['totalStunNum'])/values['battlesCount']
+            values['avgStunned'] = int(values['totalStunned'])/values['battlesCount']
             values['avgXP'] = int(values['totalXP']/values['battlesCount'])
             values['avgOriginalXP'] = int(values['totalOriginXP']/values['battlesCount'])
             values['avgOriginalPremXP'] = int(values['totalOriginPremXP']/values['battlesCount'])
@@ -534,6 +543,7 @@ class SessionStatistic(object):
             values['avgEventTmenXP'] = int(values['totalEventTmenXP']/values['battlesCount'])
             values['avgNetCredits'] = int(values['netCredits']/values['battlesCount'])
             values['avgGrossCredits'] = int(values['grossCredits']/values['battlesCount'])
+            values['avgCrystal'] = int(values['totalCrystal'] / values['battlesCount'])
             values['avgService'] = int(values['service'] / values['battlesCount'])
             values['avgTier'] = float(totalTier)/values['battlesCount']
             values['avgBattleTier'] = float(totalBattleTier)/values['battlesCount']
@@ -549,20 +559,20 @@ class SessionStatistic(object):
                 values['avgSpot']*125 + min(values['avgDef'], 2.2)*100 + \
                 ((185/(0.17 + math.exp((values['avgWinRate'] - 35)* -0.134))) - 500)*0.45 + \
                 (6-min(values['avgTier'], 6))*-60))
-            values['XWN6'] = 100 if values['WN6'] > 2300 \
+            values['XWN6'] = 100 if values['WN6'] > 2350 \
                 else int(max(min(values['WN6']*(values['WN6']*(values['WN6']*(values['WN6']*\
-                (values['WN6']*(0.00000000000000000466*values['WN6'] - 0.000000000000032413) + \
-                0.00000000007524) - 0.00000006516) + 0.00001307) + 0.05153) - 3.9, 100), 0))
+                (values['WN6']*(-0.000000000000000000852*values['WN6'] + 0.000000000000008649) - \
+                0.000000000039744) + 0.00000008406) - 0.00007446) + 0.06904) - 6.19, 100), 0))
             values['WN7'] = max(0, int((1240 - 1040/(min(values['avgTier'], 6))**0.164)*values['avgFrag'] + \
                 values['avgDamage']*530/(184*math.exp(0.24*values['avgTier']) + 130) + \
                 values['avgSpot']*125*(min(values['avgTier'], 3))/3 + min(values['avgDef'], 2.2)*100 + \
                 ((185/(0.17 + math.exp((values['avgWinRate'] - 35)* -0.134))) - 500)*0.45 - \
                 ((5-min(values['avgTier'], 5))*125) / \
                 (1+math.exp((values['avgTier'] - (values['battlesCount']/220)**(3/values['avgTier']))*1.5)) ))
-            values['XWN7'] = 100 if values['WN7'] > 2315 \
+            values['XWN7'] = 100 if values['WN7'] > 2350 \
                 else int(max(min(values['WN7']*(values['WN7']*(values['WN7']*(values['WN7']*\
-               (values['WN7']*(0.000000000000000004359 * values['WN7'] - 0.00000000000003262) + \
-               0.000000000086287) - 0.00000010299) + 0.00006373) + 0.02439) - 0.58, 100), 0))
+               (values['WN7']*(0.000000000000000001641 * values['WN7'] - 0.0000000000000126) + \
+               0.00000000003223) - 0.00000003793) + 0.00003139) + 0.02747) - 1.92, 100), 0))
             values['EFF'] = max(0, int(values['avgDamage']*(10/(values['avgTier'] + 2)) *\
                 (0.23 + 2*values['avgTier']/100) + values['avgFrag'] * 250 + \
                 values['avgSpot'] * 150 + math.log(values['avgCap'] + 1, 1.732) * 150 + \
@@ -574,9 +584,10 @@ class SessionStatistic(object):
                 ((values['avgDmgAssistTrack']/2)*(0.2 + 1.5/values['avgTier'])) + \
                 values['avgSpot'] * 200 + values['avgCap'] * 15 + values['avgDef'] * 15 ))
         else:
-            for key in ['avgWinRate', 'avgDamage', 'avgDamageRec', 'avgMileage', 'avgMileagekm', 'avgPotDmgRec', 'survivalRate', 'deathsRate', 'avgDeathsCount', 'avgFrag', 'avgShots', 'hitsRate',\
-                'effHitsRate', 'avgSpot', 'avgDef', 'avgCap', 'avgAssist', 'avgDmgAssistTrack', 'avgDmgAssistRadio', 'avgXP', 'avgOriginalXP', 'avgOriginalPremXP', 'avgFreeXP', 'avgOriginalFreeXP',\
-                'avgTmenXP', 'avgEventTmenXP', 'avgNetCredits', 'avgGrossCredits', 'avgService', 'avgTier', 'avgBattleTier', 'medPlace', 'avgPlace', 'WN6', 'XWN6', 'WN7', 'XWN7', 'EFF', 'XEFF', 'BR']:
+            for key in ['avgWinRate', 'avgDamage', 'avgDamageRec', 'avgMileage', 'avgMileagekm', 'avgPotDmgRec', 'avgDamageBlocked', 'survivalRate', 'deathsRate', 'avgDeathsCount', 'avgFrag', 'avgShots', 'hitsRate',\
+                'effHitsRate', 'avgSpot', 'avgDef', 'avgCap', 'avgAssist', 'avgDmgAssistTrack', 'avgDmgAssistRadio', 'avgDmgAssistedStun', 'avgStunDuration', 'avgStunNum', 'avgStunned', 'avgXP', 'avgOriginalXP',\
+                'avgOriginalPremXP', 'avgFreeXP', 'avgOriginalFreeXP', 'avgTmenXP', 'avgEventTmenXP', 'avgNetCredits', 'avgGrossCredits', 'avgCrystal', 'avgService', 'avgTier', 'avgBattleTier', 'medPlace', 'avgPlace',\
+                'WN6', 'XWN6', 'WN7', 'XWN7', 'EFF', 'XEFF', 'BR']:
                 values[key] = 0
             for key in expKeys:
                 values[key] = 1
@@ -598,7 +609,7 @@ class SessionStatistic(object):
         values['WN8'] = int(values['WN8'])
         values['avgDamage'] = int(values['avgDamage'])
         values['avgMileage'] = int(values['avgMileage'])
-        (gradient, palette) = self.refreshColorMacros(values)
+        gradient, palette = self.refreshColorMacros(values)
         return (values, gradient, palette)
 
     def applyMacros(self, val, prec = 2):
