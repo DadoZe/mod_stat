@@ -5,12 +5,15 @@
     avgBattleTier            Average max battle tier of tanks fought against in battles            totalBattleTier / battlesCount
     avgBattleTierDiff        Difference between average battle tier and average own tank tier      avgBattleTier - avgTier
     avgCap                   Average capture points                                                totalCap / battlesCount
+    avgCrystal               Average bonds                                                         totalCrystal / battlesCount
     avgDamage                Average damage done                                                   totalDmg / battlesCount
     avgDamageRec             Average damage received                                               totalDmgRec / battlesCount
+    avgDamageBlocked         Average damage blocked                                                totalDamageBlocked / battlesCount
     avgDeathsCount           Average number of deaths                                              totalDeathsCount / battlesCount
     avgDef                   Average defence points                                                totalDef / battlesCount
     avgDmgAssistRadio        Average assist by spotting                                            totalDmgAssistRadio / battlesCount
     avgDmgAssistTrack        Average assist by detracking                                          totalDmgAssistTrack / battlesCount
+    avgDmgAssistedStun       Average assist by stun                                                totalDmgAssistedStun / battlesCount
     avgEventTmenXP           Average xp received for crew members during events (just bonus)       totalEventTmenXP / battlesCount
     avgFrag                  Average number of kills                                               totalFrag / battlesCount
     avgFreeXP                Average free xp received (premium and daily xp factor included)       totalFreeXP / battlesCount
@@ -26,6 +29,9 @@
     avgService               Average service from battle                                           service / battlesCount
     avgShots                 Average number of shots                                               totalShots / battlesCount
     avgSpot                  Average number of spotted enemies                                     totalSpot / battlesCount
+    avgStunDuration          Average stun duration                                                 totalStunDuration / battlesCount
+    avgStunNum               Average number of stuns                                               totalStunNum / battlesCount
+    avgStunned               Average number of stuned vehicles                                     totalStunned / battlesCount
     avgTier                  Average tier of own tanks fought with                                 totalTier / battlesCount
     avgTmenXP                Average xp received for crew members                                  totalTmenXP / battlesCount
     avgWinRate               Average wins in percent                                               winsCount / battlesCount * 100
@@ -66,10 +72,13 @@
     survivalRate             Number of battles survived in percent                                 totalDeathsCount / battlesCount * 100 - 100
     totalAssist              Total assist by detracking and spotting
     totalCap                 Total capture points
+    totalCrystal             Total bonds
     totalDeathsCount         Total deaths
     totalDef                 Total defence points
+    totalDamageBlocked       Total damage blocked
     totalDmgAssistRadio      Total assist by spotting
     totalDmgAssistTrack      Total assist by detracking
+    totalDmgAssistedStun     Total assist by stun
     totalDmg                 Total damage done
     totalDmgRec              Total damage received
     totalEventTmenXP         Total xp received for crew members during events (just bonus)
@@ -85,6 +94,9 @@
     totalPotDmgRec           Total potential damage received
     totalShots               Total shots
     totalSpot                Total spotting
+    totalStunDuration        Total stun duration
+    totalStunNum             Total number of stuns
+    totalStunned             Total number of stunned vehicles
     totalTmenXP              Total xp received for crew members
     totalXP                  Total xp received
     vehicle-long             Translated long vehicle name (M18 Hellcat)
@@ -113,28 +125,33 @@
     buttonReset              Button to reset statistics
 
    Type of battle for "battleType" section:
-     0 UNKNOWN               Special Battle (Clan War, Tournament etc.)
-     1 RANDOM                Random Battle
+     0 UNKNOWN               Unknown Battle
+     1 REGULAR               Random Battle
      2 TRAINING              Team Training
      3 COMPANY               Tank Company Battle                                                   Removed
-     4 TUTORIAL              Tutorial
-     5 CYBERSPORT            Team Battle (Unranked)
-     6 FALLOUT               Rampage
-     7 EVENT_BATTLES         Event Battle (8-bit, Tank Football etc.)
-     8 SORTIE                Stronghold Skirmishes (before 0.9.17.1)                               Removed
-     9 FORT_BATTLE           Stronghold Battle (before 0.9.17.1)                                   Removed
-    10 RATED_CYBERSPORT      Team Battle (Ranked)                                                  Removed
-    11 RATED_SANDBOX         Proving Ground <10 battles
-    12 SANDBOX               Proving Ground >10 battles
-    13 FALLOUT_CLASSIC       Domination
-    14 FALLOUT_MULTITEAM     Steel Hunt
-    15 SORTIE_2              Stronghold Skirmishes (after 0.9.17.1)
-    16 FORT_BATTLE_2         Stronghold Advances (after 0.9.17.1)
-    17 RANKED                Ranked Battles
-    18 BOOTCAMP              Bootcamp
-    19 EPIC_RANDOM           Grand Battles
-    20 EPIC_RANDOM_TRAINING  Grand Battles Training
-    21 EVENT_BATTLES_2       Event Battles (after 0.9.20.1.1)
+     4 TOURNAMENT            Tournament
+     5 CLAN                  Clan Battle
+     6 TUTORIAL              Tutorial
+     7 CYBERSPORT            Team Battle (Unranked)
+     8 HISTORICAL            Historical Battle                                                     Removed
+     9 EVENT_BATTLES         Event Battle (8-bit, Tank Football etc.)
+    10 SORTIE                Stronghold Skirmish (old)                                             Removed
+    11 FORT_BATTLE           Stronghold Battle (old)                                               Removed
+    12 RATED_CYBERSPORT      Team Battle (Ranked)                                                  Removed
+    13 GLOBAL_MAP            Global Map
+    14 TOURNAMENT_REGULAR    Regular Tournament (Global Map Event)
+    15 TOURNAMENT_CLAN       Periodical Tournament (Global Map Event)
+    16 RATED_SANDBOX         Proving Ground <10 battles
+    17 SANDBOX               Proving Ground >10 battles
+    18 FALLOUT_CLASSIC       Steel Hunt
+    19 FALLOUT_MULTITEAM     Domination
+    20 SORTIE_2              Stronghold Skirmish (new)
+    21 FORT_BATTLE_2         Stronghold Advance (new)
+    22 RANKED                Ranked Battle
+    23 BOOTCAMP              Bootcamp
+    24 EPIC_RANDOM           Grand Battle
+    25 EPIC_RANDOM_TRAINING  Grand Battle Training
+    26 EVENT_BATTLES_2       Event Battle (new)
 
    Decimal places and right alignment of macros
     :d                       Macro without decimal ({{deathsRate:d}} will be displayed '63')
